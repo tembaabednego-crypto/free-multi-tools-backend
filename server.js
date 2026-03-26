@@ -45,6 +45,10 @@ if (ffmpegPath) {
   ffmpeg.setFfmpegPath(ffmpegPath);
 }
 
+app.get("/", (req, res) => {
+  res.send("Free Multi-Tools backend is running");
+});
+
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
@@ -362,5 +366,5 @@ app.use((err, req, res, _next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Free Multi-Tool backend listening on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
