@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: free-multi-tools-backend
+    env: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: CORS_ORIGIN
+        value: "*"
+

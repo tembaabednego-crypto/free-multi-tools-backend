@@ -1,0 +1,22 @@
+{
+  "name": "free-multi-tools-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Free Multi-Tool backend (Node.js + Express)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "*",
+    "dotenv": "*",
+    "docx": "*",
+    "express": "*",
+    "ffmpeg-static": "*",
+    "fluent-ffmpeg": "*",
+    "multer": "*",
+    "pdf-lib": "*",
+    "pdf-parse": "*",
+    "sharp": "*"
+  }
+}
