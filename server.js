@@ -13,7 +13,7 @@ app.use(express.json());
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
-    fileSize: 20 * 1024 * 1024,
+    fileSize: 20 * 1024 * 1024, // 20MB
   },
 });
 
@@ -21,51 +21,7 @@ app.get("/health", (req, res) => {
   res.json({ ok: true, message: "Server is running" });
 });
 
-try {
-  if (!req.file) {
-    return res.status(400).json({ error: "No PDF file uploaded" });
-  }
-
-  // 🔥 Extract text from PDF
-  const data = await pdf(req.file.buffer);
-
-  if (!data.text || data.text.trim() === "") {
-    return res.status(500).json({
-      error: "Failed to extract text from PDF"
-    });
-  }
-
-  // 🔥 Create Word document
-  const doc = new Document({
-    sections: [
-      {
-        properties: {},
-        children: data.text.split("\n").map(line =>
-          new Paragraph({
-            children: [new TextRun(line)]
-          })
-        )
-      }
-    ]
-  });
-
-  const buffer = await Packer.toBuffer(doc);
-
-  res.setHeader(
-    "Content-Disposition",
-    "attachment; filename=converted.docx"
-  );
-  res.setHeader(
-    "Content-Type",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-  );
-
-  res.send(buffer);
-
-} catch (error) {
-  console.error("Conversion error:", error);
-  res.status(500).json({ error: "Conversion failed" });
-}
+app.post("/api/convert/pdf-to-word", upload.single("file"), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: "No PDF file uploaded." });
@@ -84,18 +40,16 @@ try {
       });
     }
 
-    const lines = extractedText
+    const paragraphs = extractedText
       .split(/\r?\n/)
       .map((line) => line.trim())
-      .filter((line) => line.length > 0);
-
-    const paragraphs = lines.map(
-      (line) =>
-        new Paragraph({
-          children: [new TextRun(line)],
-          spacing: { after: 200 },
-        })
-    );
+      .filter((line) => line.length > 0)
+      .map(
+        (line) =>
+          new Paragraph({
+            children: [new TextRun(line)],
+          })
+      );
 
     const doc = new Document({
       sections: [
@@ -107,22 +61,26 @@ try {
     });
 
     const buffer = await Packer.toBuffer(doc);
-    const fileName = req.file.originalname.replace(/\.pdf$/i, "") + ".docx";
 
     res.setHeader(
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     );
-    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader(
+      "Content-Disposition",
+      'attachment; filename="converted.docx"'
+    );
 
-    res.send(buffer);
+    return res.send(buffer);
   } catch (error) {
     console.error("Conversion error:", error);
-    res.status(500).json({
-      error: "Failed to convert PDF to Word.",
-      details: error.message,
-    });
+    return res.status(500).json({ error: "Conversion failed." });
   }
+});
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled server error:", err);
+  return res.status(500).json({ error: "Internal server error." });
 });
 
 app.listen(PORT, () => {
